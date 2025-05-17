@@ -1,60 +1,33 @@
 <script lang="ts">
-	import { GlobalState, preventDefault } from '$lib';
-	import { Button } from '$lib/components/ui/button/index.js';
-	import { Input } from '$lib/components/ui/input/index.js';
-	import * as Card from '$lib/components/ui/card/index.js';
+	// import { GlobalState, preventDefault } from '$lib';
+	import { Button } from '$lib/components/ui/button/index';
 
-	const gs = new GlobalState();
+	import type { CommonAppActivity } from '$lib/types';
+	import { getFilePath, openFile } from '$lib/utils/fs';
+	import CommonAppActivityCard from '$lib/widgets/CommonAppActivityCard.svelte';
 
-	$inspect(gs.greet, gs.name);
+	let filePath = $state('');
+	let activities: CommonAppActivity[] = $state([]);
 
-	const onsubmit = preventDefault(() => gs.nlen && gs.submit());
-	const onclick = () => gs.reset();
+	const handleOpenFile = async () => {
+		filePath = await getFilePath();
+		activities = (await openFile(filePath)) ?? [];
+	};
+
+	// const gs = new GlobalState();
+	// const onsubmit = preventDefault(() => gs.nlen && gs.submit());
+	// const onclick = () => gs.reset();
 </script>
 
-<div
-	class="min-h-screen flex items-center justify-center p-4 transition-all duration-500"
->
-	<Card.Root
-		class="w-[380px] backdrop-blur-sm bg-white/90 dark:bg-gray-800/90 shadow-xl hover:shadow-2xl transition-all duration-300 rounded-xl"
-	>
-		<Card.Header class="space-y-2">
-			<Card.Title
-				class="text-3xl font-bold text-center bg-clip-text"
-			>
-				{#if gs.greet}
-					<p>{gs.greet}</p>
-					<small class="text-sm">(from Rust side)</small>
-				{:else}
-					<p>Hello World!</p>
-				{/if}
-			</Card.Title>
-		</Card.Header>
-		<Card.Content class="p-6">
-			<form {onsubmit} class="space-y-6">
-				{#if !gs.greet}
-					<Input
-						type="text"
-						placeholder="Enter your username"
-						bind:value={gs.name}
-						class="w-full px-4 py-2 rounded-lg outline-none border border-gray-200 dark:border-gray-700 transition-all duration-200"
-					/>
-				{/if}
-				{#if gs.name && !gs.greet}
-					<Button
-						type="submit"
-						class="w-full hover:opacity-90 transition-opacity duration-200"
-					>
-						Say Hello
-					</Button>
-				{:else if gs.greet}
-					<Button
-						{onclick}
-						class="w-full hover:opacity-90 transition-opacity duration-200"
-						>Reset</Button
-					>
-				{/if}
-			</form>
-		</Card.Content>
-	</Card.Root>
+<div class="min-h-screen flex flex-col gap-8 p-4">
+	<div class="flex items-center gap-4">
+		<Button onclick={handleOpenFile}>Open File</Button>
+		<small class="text-sm">{filePath}</small>
+	</div>
+
+	<div class="flex flex-col gap-4 w-fit">
+		{#each activities as activity}
+			<CommonAppActivityCard {activity} />
+		{/each}
+	</div>
 </div>
